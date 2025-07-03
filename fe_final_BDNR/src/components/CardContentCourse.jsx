@@ -33,7 +33,7 @@ export const CardContentCourse = ({
         >
           {isPending ? "Memuat..." : "Hapus"}
         </Button>
-        <Link to={`/dashboard/courses/${id}/detail`}>
+        <Link to={`/dashboard/teacher/courses/${id}/detail`}>
           <Button variant="outline" size="lg">
             Edit
           </Button>

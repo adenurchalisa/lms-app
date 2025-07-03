@@ -36,7 +36,7 @@ const CoursePage = () => {
       <Toaster />
       <div className="flex items-center justify-between">
         <h1 className="font-medium text-3xl">Daftar Course</h1>
-        <Link to="/dashboard/courses/create">
+        <Link to="/dashboard/teacher/courses/create">
           <Button>Buat Course</Button>
         </Link>
       </div>
