@@ -82,7 +82,35 @@ export const AppSidebar = () => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton>
-                  <Link to={"/dashboard/student"}>Dashboard</Link>
+                  <Link
+                    to={"/dashboard/student"}
+                    className="flex items-center gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                    Dashboard
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Link
+                    to="/dashboard/student/courses"
+                    className="flex items-center gap-2"
+                  >
+                    Jelajahi Course
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Link
+                    to="/dashboard/student/profile"
+                    className="flex items-center gap-2"
+                  >
+                    Profile
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

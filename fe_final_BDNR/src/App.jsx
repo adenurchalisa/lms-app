@@ -10,6 +10,8 @@ import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import { TeacherPage } from "./guard/TeacherPage";
 import { StudentPage } from "./guard/StudentPage";
 import CourseStudentDetailPage from "./pages/student/CourseStudentDetailPage";
+import AllCoursesPage from "./pages/student/AllCoursesPage";
+import ProfilePage from "./pages/student/ProfilePage";
 
 function App() {
   return (
@@ -32,10 +34,9 @@ function App() {
         {/* Student Routes with nested structure */}
         <Route path="/dashboard/student" element={<StudentPage />}>
           <Route index element={<StudentDashboard />} />
-          <Route
-            path="/dashboard/student/:id/detail"
-            element={<CourseStudentDetailPage />}
-          />
+          <Route path="courses" element={<AllCoursesPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path=":id/detail" element={<CourseStudentDetailPage />} />
           {/* Add more student routes here as needed */}
         </Route>
       </Routes>
