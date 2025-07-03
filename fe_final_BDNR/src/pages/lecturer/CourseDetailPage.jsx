@@ -27,6 +27,7 @@ import { deleteMaterial } from "@/service/materialService";
 import { toast } from "sonner";
 import { Edit, Plus, Trash2, Book, ArrowLeft } from "lucide-react";
 import { CreateMaterialForm } from "@/components/CreateMaterialForm";
+import { EditMaterialForm } from "@/components/EditMaterialForm";
 
 const CourseDetailPage = () => {
   const { id } = useParams();
@@ -36,6 +37,8 @@ const CourseDetailPage = () => {
   const [courseDescription, setCourseDescription] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState(null);
+  const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
+  const [materialToEdit, setMaterialToEdit] = useState(null);
 
   // Fetch course data
   const { data: courseData, isLoading: courseLoading } = useQuery({
@@ -120,6 +123,11 @@ const CourseDetailPage = () => {
   const handleDeleteMaterialClick = (material) => {
     setMaterialToDelete(material);
     setDeleteDialogOpen(true);
+  };
+
+  const handleEditMaterialClick = (material) => {
+    setMaterialToEdit(material);
+    setEditMaterialDialogOpen(true);
   };
 
   const confirmDeleteMaterial = () => {
@@ -246,7 +254,11 @@ const CourseDetailPage = () => {
                           </a>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditMaterialClick(material)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -372,6 +384,16 @@ const CourseDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Material Form */}
+      {materialToEdit && (
+        <EditMaterialForm
+          material={materialToEdit}
+          courseId={id}
+          isOpen={editMaterialDialogOpen}
+          onOpenChange={setEditMaterialDialogOpen}
+        />
+      )}
     </div>
   );
 };

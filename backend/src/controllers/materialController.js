@@ -105,31 +105,40 @@ exports.getMaterial = async (req, res) => {
 exports.updateMaterial = async (req, res) => {
   try {
     const material = await Material.findById(req.params.id);
-    if (!material)
+    if (!material) {
+      cleanUpFile(req.file);
       return res.status(404).json({ message: "Materi tidak ditemukan" });
+    }
 
     // Hanya creator yang boleh edit (opsional: bisa dibuat teacher course owner)
     if (material.createdBy.toString() !== req.user.userId) {
+      cleanUpFile(req.file);
       return res
         .status(403)
         .json({ message: "Hanya creator yang boleh mengedit materi ini" });
     }
 
     // Validasi sederhana
-    const { title, content } = req.body;
-    if (!title && !content) {
+    const { title } = req.body;
+    if (!title && !req.file) {
+      cleanUpFile(req.file);
       return res.status(400).json({
-        message:
-          "Minimal salah satu field (title/content) harus diisi untuk update",
+        message: "Minimal salah satu field (title atau file) harus diisi untuk update",
       });
     }
 
     if (title) material.title = title;
-    if (content) material.content = content;
+    
+    // If new file is uploaded, update the content URL
+    if (req.file) {
+      const fileUrl = `${process.env.APP_URL}/uploads/materials/${req.file.filename}`;
+      material.content = fileUrl;
+    }
 
     await material.save();
     res.json({ message: "Materi berhasil diupdate", material });
   } catch (err) {
+    cleanUpFile(req.file);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };

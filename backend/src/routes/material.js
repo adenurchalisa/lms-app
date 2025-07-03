@@ -34,6 +34,7 @@ router.put(
   "/materials/:id",
   auth,
   role("teacher"),
+  upload.single("content"),
   materialController.updateMaterial
 );
 
