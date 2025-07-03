@@ -142,7 +142,7 @@ const CourseDetailPage = () => {
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/dashboard/courses">
+        <Link to="/dashboard/teacher/courses">
           <Button variant="outline" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -254,8 +254,8 @@ const CourseDetailPage = () => {
                           </a>
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleEditMaterialClick(material)}
                           >

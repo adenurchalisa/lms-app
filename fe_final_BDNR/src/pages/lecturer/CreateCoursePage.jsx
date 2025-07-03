@@ -6,8 +6,9 @@ import courseSchema from "@/lib/schema/courseSchema";
 import { postCourse } from "@/service/courseService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 const CreateCoursePage = () => {
@@ -51,6 +52,12 @@ const CreateCoursePage = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-10">
+      <Link to="/dashboard/teacher/courses">
+        <Button variant="outline" size="icon">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      </Link>
+
       <form onSubmit={handleSubmit(onSubmitHandle)}>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Buat Course</h1>
