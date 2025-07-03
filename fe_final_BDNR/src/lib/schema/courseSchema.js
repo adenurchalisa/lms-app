@@ -5,7 +5,7 @@ const courseSchema = z.object({
     .string()
     .min(5, { message: "Judulnya kependekan" })
     .max(20, { message: "Judulnya kepanjangan" }),
-  desc: z
+  description: z
     .string()
     .min(10, { message: "Deskripsinya kependekan" })
     .max(100, { message: "Panjangnya" }),

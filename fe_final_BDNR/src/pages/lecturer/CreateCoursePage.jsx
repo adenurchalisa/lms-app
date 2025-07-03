@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import courseSchema from "@/lib/schema/courseSchema";
 import { postCourse } from "@/service/courseService";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -21,12 +21,23 @@ const CreateCoursePage = () => {
   });
   const navigate = useNavigate();
 
-  const { mutateAsync, isPending } = useMutation({ mutationFn: postCourse });
+  const queryClient = useQueryClient();
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: postCourse,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+  });
 
   const onSubmitHandle = async (data) => {
     try {
       await mutateAsync(data);
-      navigate("/");
+      setTimeout(() => {
+        toast.success("Course berhasil dibuat");
+      }, 1500);
+
+      navigate("/dashboard/courses");
     } catch (error) {
       toast(error.response.data.message);
 
@@ -67,15 +78,15 @@ const CreateCoursePage = () => {
           <div className="grid gap-3">
             <Label htmlFor="desc">Deskripsi</Label>
             <textarea
-              name="desc"
-              id="desc"
-              {...register("desc")}
+              name="description"
+              id="description"
+              {...register("description")}
               className="outline rounded-md ps-3 pt-2 placeholder:text-muted-foreground selection:text-primary-foreground text-base md:text-sm resize-none h-28"
               placeholder="Masukkan Deskripsi Course"
             ></textarea>
-            {errors.desc && (
+            {errors.description && (
               <span className="text-sm text-red-400">
-                {errors.desc.message}
+                {errors.description.message}
               </span>
             )}
           </div>

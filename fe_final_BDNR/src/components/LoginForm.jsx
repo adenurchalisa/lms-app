@@ -26,7 +26,16 @@ export function LoginForm({ className, ...props }) {
       const response = await mutateAsync(data);
       localStorage.setItem("credentials", JSON.stringify(response.data));
 
-      navigate("/");
+      // Role-based routing
+      const userRole = response.data.role;
+      if (userRole === "teacher") {
+        navigate("/dashboard/teacher");
+      } else if (userRole === "student") {
+        navigate("/dashboard/student");
+      } else {
+        // Fallback for unknown roles
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast.error("Terjadi Kesalahan", {
         description: error.response.data.message,

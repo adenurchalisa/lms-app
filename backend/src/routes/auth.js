@@ -8,4 +8,4 @@ router.post('/register', authController.register);
 // Route login
 router.post('/login', authController.login);
 
-module.exports = router;
+module.exports = router; 

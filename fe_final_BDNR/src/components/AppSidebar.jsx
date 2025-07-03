@@ -3,16 +3,34 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
-import { Command, LogOut } from "lucide-react";
+import { Command, LayoutDashboard, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Link } from "react-router";
+import { authLogout } from "@/service/authService";
+import { getSession } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
+import { getCourseStudent } from "@/service/studentService";
 
 export const AppSidebar = () => {
+  const session = getSession();
+  const userRole = session?.role;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["listCourse"],
+    queryFn: getCourseStudent,
+  });
+
+  const handleLogout = () => {
+    authLogout();
+  };
+
   return (
     <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader>
@@ -33,10 +51,68 @@ export const AppSidebar = () => {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Courses</SidebarGroupLabel>
-          <SidebarMenu></SidebarMenu>
-        </SidebarGroup>
+        {userRole === "teacher" && (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton isActive>
+                <Link
+                  to={"/dashboard/teacher"}
+                  className="flex items-center gap-2"
+                >
+                  <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <Link
+                  to="/dashboard/teacher/courses"
+                  className="flex items-center gap-2"
+                >
+                  Manage Course
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
+        {userRole === "student" && (
+          <>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Link to={"/dashboard/student"}>Dashboard</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>My Course</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {isLoading ? (
+                    <p>Bentar...</p>
+                  ) : (
+                    data.courses.map((course) => {
+                      return (
+                        <SidebarMenuItem key={course._id}>
+                          <SidebarMenuButton>
+                            <Link
+                              to={`/dashboard/student/${course._id}/detail`}
+                            >
+                              {course.title}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
@@ -44,14 +120,21 @@ export const AppSidebar = () => {
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              onClick={handleLogout}
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src="" alt="" />
-                <AvatarFallback className="rounded-lg">US</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {session?.email?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Suminten</span>
-                <span className="truncate text-xs">Suminten@gmail.com</span>
+                <span className="truncate font-medium">
+                  {session?.email?.split("@")[0] || "User"}
+                </span>
+                <span className="truncate text-xs">
+                  {session?.email || "No email"}
+                </span>
               </div>
               <LogOut className="ml-auto size-4" />
             </SidebarMenuButton>
