@@ -39,11 +39,14 @@ exports.getCourses = async(req, res) => {
 exports.getCourse = async(req, res) => {
     try {
         const course = await Course.findById(req.params.id)
-            .populate("createdBy", "name email")
-            .populate("materials", "title content");
+            .populate("createdBy", "email")
+            .populate("materials", "title content")
+            .populate("students", "email");
 
         if (!course)
             return res.status(404).json({ message: "Course tidak ditemukan" });
+
+        console.log("Course students data:", course.students); // Debug log
 
         res.json({
             course,

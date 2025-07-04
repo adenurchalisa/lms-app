@@ -93,9 +93,9 @@ exports.getEnrolledStudents = async(req, res) => {
             return res.status(403).json({ message: "Kamu bukan owner course ini" });
         }
 
-        const enrollments = await Enrollment.find({ course: courseId }).populate(
+        const enrollments = await Enrollment.find({ "enroll.course": courseId }).populate(
             "user",
-            "name email"
+            "email"
         );
         const students = enrollments.map((e) => e.user);
         res.json({ students });
@@ -164,11 +164,32 @@ exports.getTeacherDashboardStats = async(req, res) => {
             },
         ]);
 
-        // 4. Kirim hasil response lengkap
+        // 4. Hitung Growth Rate (per hari)
+        let growthRate = 0;
+        if (dailyStats.length >= 2) {
+            // Ambil data hari ini dan kemarin
+            const today = dailyStats[dailyStats.length - 1];
+            const yesterday = dailyStats[dailyStats.length - 2];
+
+            const todayEnrollments = today ? today.total : 0;
+            const yesterdayEnrollments = yesterday ? yesterday.total : 0;
+
+            if (yesterdayEnrollments > 0) {
+                growthRate = ((todayEnrollments - yesterdayEnrollments) / yesterdayEnrollments) * 100;
+            } else if (todayEnrollments > 0) {
+                growthRate = 100; // 100% growth jika dari 0 ke angka positif
+            }
+
+            // Round ke 1 desimal
+            growthRate = Math.round(growthRate * 10) / 10;
+        }
+
+        // 5. Kirim hasil response lengkap
         res.json({
             totalCourses,
             totalStudents,
             dailyStats,
+            growthRate,
         });
     } catch (error) {
         console.error(error);
@@ -178,25 +199,40 @@ exports.getTeacherDashboardStats = async(req, res) => {
 
 exports.getStudentCourses = async(req, res) => {
     try {
+        console.log("getStudentCourses called for user:", req.user.userId);
+
         const studentId = req.user.userId;
+
+        if (!studentId) {
+            console.log("No student ID found in request");
+            return res.status(400).json({ message: "Student ID tidak ditemukan" });
+        }
 
         const enrollment = await Enrollment.findOne({ user: studentId }).populate(
             "enroll.course"
         );
 
         if (!enrollment || enrollment.enroll.length === 0) {
+            console.log("No enrollment found, returning empty courses");
             return res.json({ courses: [] });
         }
 
-        const courses = enrollment.enroll.map((item) => ({
-            _id: item.course._id,
-            title: item.course.title,
-        }));
+        const courses = enrollment.enroll.map((item) => {
+            if (!item.course) {
+                console.log("Course not found for enrollment item, skipping");
+                return null;
+            }
+            return {
+                _id: item.course._id,
+                title: item.course.title,
+            };
+        }).filter(course => course !== null);
 
+        console.log("Returning", courses.length, "courses");
         res.json({ courses });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Gagal mengambil course student" });
+        console.error("Error in getStudentCourses:", err.message);
+        res.status(500).json({ message: "Gagal mengambil course student", error: err.message });
     }
 };
 

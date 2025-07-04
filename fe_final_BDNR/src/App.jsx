@@ -12,6 +12,7 @@ import { StudentPage } from "./guard/StudentPage";
 import CourseStudentDetailPage from "./pages/student/CourseStudentDetailPage";
 import AllCoursesPage from "./pages/student/AllCoursesPage";
 import ProfilePage from "./pages/student/ProfilePage";
+import StudentQuizPage from "./pages/student/QuizPage";
 
 function App() {
   return (
@@ -37,8 +38,10 @@ function App() {
           <Route path="courses" element={<AllCoursesPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path=":id/detail" element={<CourseStudentDetailPage />} />
-          {/* Add more student routes here as needed */}
         </Route>
+
+        {/* Quiz Route (outside of student dashboard for full screen) */}
+        <Route path="/quiz/:quizId" element={<StudentQuizPage />} />
       </Routes>
     </>
   );

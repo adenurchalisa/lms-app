@@ -12,6 +12,7 @@ module.exports = function(req, res, next) {
         req.user = decoded; // simpan data user di request
         next();
     } catch (err) {
+        console.log("JWT verification error:", err.message);
         return res.status(403).json({ message: 'Token tidak valid' });
     }
 };

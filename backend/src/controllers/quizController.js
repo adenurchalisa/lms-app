@@ -15,7 +15,7 @@ exports.createQuiz = async(req, res) => {
         // Validasi: pastikan course ada dan user adalah owner
         const course = await Course.findById(courseId);
         if (!course) return res.status(404).json({ message: 'Course not found' });
-        if (String(course.createdBy) !== req.user._id) {
+        if (String(course.createdBy) !== req.user.userId) {
             return res.status(403).json({ message: 'You are not the course owner' });
         }
 
@@ -25,7 +25,7 @@ exports.createQuiz = async(req, res) => {
             title,
             description,
             questions,
-            createdBy: req.user._id
+            createdBy: req.user.userId
         });
         await quiz.save();
         res.status(201).json({ message: 'Quiz created', quiz });
@@ -72,7 +72,7 @@ exports.submitQuiz = async(req, res) => {
         // Cek apakah sudah pernah submit
         const existing = await QuizSubmission.findOne({
             quiz: quizId,
-            student: req.user._id
+            student: req.user.userId
         });
         if (existing) {
             return res.status(400).json({ message: 'You have already submitted this quiz' });
@@ -91,7 +91,7 @@ exports.submitQuiz = async(req, res) => {
 
         const submission = new QuizSubmission({
             quiz: quizId,
-            student: req.user._id,
+            student: req.user.userId,
             answers,
             score,
             graded: true
@@ -103,7 +103,7 @@ exports.submitQuiz = async(req, res) => {
         try {
             const progressController = require('./progressController');
             if (progressController && typeof progressController.markQuizDone === "function") {
-                await progressController.markQuizDone(req.user._id, quiz.course, quizId);
+                await progressController.markQuizDone(req.user.userId, quiz.course, quizId);
             }
         } catch (e) {
             // Optional: log error jika progressController gagal di-load, tapi tidak menggagalkan submit quiz
@@ -123,7 +123,7 @@ exports.getMySubmission = async(req, res) => {
         const { quizId } = req.params;
         const submission = await QuizSubmission.findOne({
             quiz: quizId,
-            student: req.user._id
+            student: req.user.userId
         });
         if (!submission) return res.status(404).json({ message: 'No submission found' });
         res.json(submission);
@@ -141,10 +141,10 @@ exports.getQuizSubmissions = async(req, res) => {
         const { quizId } = req.params;
         const quiz = await Quiz.findById(quizId);
         if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
-        if (String(quiz.createdBy) !== req.user._id) {
+        if (String(quiz.createdBy) !== req.user.userId) {
             return res.status(403).json({ message: 'You are not the quiz owner' });
         }
-        const submissions = await QuizSubmission.find({ quiz: quizId }).populate('student', 'name email');
+        const submissions = await QuizSubmission.find({ quiz: quizId }).populate('student', 'email');
         res.json(submissions);
     } catch (err) {
         res.status(500).json({ message: err.message });

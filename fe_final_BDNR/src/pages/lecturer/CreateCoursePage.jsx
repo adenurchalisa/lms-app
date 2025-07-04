@@ -38,7 +38,7 @@ const CreateCoursePage = () => {
         toast.success("Course berhasil dibuat");
       }, 1500);
 
-      navigate("/dashboard/courses");
+      navigate("/dashboard/teacher/courses");
     } catch (error) {
       toast(error.response.data.message);
 

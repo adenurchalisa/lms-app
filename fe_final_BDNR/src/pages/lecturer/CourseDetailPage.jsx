@@ -24,9 +24,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TeacherPage } from "@/guard/TeacherPage";
 import { getCourseById, updateCourse } from "@/service/courseService";
 import { deleteMaterial } from "@/service/materialService";
+import { getEnrolledStudents } from "@/service/enrollmentService";
+import { getQuizzesByCourse, createQuiz } from "@/service/quizService";
 import { toast } from "sonner";
-import { Edit, Plus, Trash2, Book, ArrowLeft } from "lucide-react";
+import { Edit, Plus, Trash2, Book, ArrowLeft, Users, Mail } from "lucide-react";
 import { CreateMaterialForm } from "@/components/CreateMaterialForm";
+import { CreateQuizForm } from "@/components/CreateQuizForm";
 import { EditMaterialForm } from "@/components/EditMaterialForm";
 
 const CourseDetailPage = () => {
@@ -39,6 +42,7 @@ const CourseDetailPage = () => {
   const [materialToDelete, setMaterialToDelete] = useState(null);
   const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState(null);
+  const [createQuizDialogOpen, setCreateQuizDialogOpen] = useState(false);
 
   // Fetch course data
   const { data: courseData, isLoading: courseLoading } = useQuery({
@@ -47,7 +51,16 @@ const CourseDetailPage = () => {
     onSuccess: (data) => {
       setCourseTitle(data.course.title);
       setCourseDescription(data.course.description);
+      console.log("Course data received:", data.course); // Debug log
+      console.log("Students data:", data.course.students); // Debug log
     },
+  });
+
+  // Fetch quizzes for this course
+  const { data: quizzes, isLoading: quizzesLoading } = useQuery({
+    queryKey: ["quizzes", id],
+    queryFn: () => getQuizzesByCourse(id),
+    enabled: !!id,
   });
 
   // Update course mutation
@@ -74,20 +87,23 @@ const CourseDetailPage = () => {
       },
     });
 
-  const quizzes = [
-    {
-      _id: "1",
-      title: "React Basics Quiz",
-      description: "Test your React knowledge",
-      questions: 5,
+  // Create quiz mutation
+  const { mutateAsync: createQuizAsync, isPending: isCreatingQuiz } = useMutation({
+    mutationFn: (quizData) => createQuiz(id, quizData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes", id] });
+      toast.success("Quiz created successfully");
+      setCreateQuizDialogOpen(false);
     },
-    {
-      _id: "2",
-      title: "Hooks Quiz",
-      description: "Quiz about React Hooks",
-      questions: 3,
-    },
-  ];
+  });
+
+  const handleCreateQuiz = async (quizData) => {
+    try {
+      await createQuizAsync(quizData);
+    } catch (error) {
+      toast.error("Failed to create quiz");
+    }
+  };
 
   const handleEditCourse = () => {
     setIsEditingCourse(true);
@@ -285,13 +301,34 @@ const CourseDetailPage = () => {
                   </CardTitle>
                   <CardDescription>Course assessments</CardDescription>
                 </div>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Quiz
-                </Button>
+                <Dialog open={createQuizDialogOpen} onOpenChange={setCreateQuizDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Quiz
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create New Quiz</DialogTitle>
+                      <DialogDescription>
+                        Create a multiple choice quiz for your course
+                      </DialogDescription>
+                    </DialogHeader>
+                    <CreateQuizForm
+                      onSubmit={handleCreateQuiz}
+                      onCancel={() => setCreateQuizDialogOpen(false)}
+                      isLoading={isCreatingQuiz}
+                    />
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent>
-                {quizzes.length === 0 ? (
+                {quizzesLoading ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Loading quizzes...
+                  </div>
+                ) : !quizzes || quizzes.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     No quizzes yet. Create your first quiz!
                   </div>
@@ -305,10 +342,10 @@ const CourseDetailPage = () => {
                         <div>
                           <h4 className="font-medium">{quiz.title}</h4>
                           <p className="text-sm text-gray-600">
-                            {quiz.description}
+                            {quiz.description || "No description"}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {quiz.questions} questions
+                            {quiz.questions?.length || 0} questions
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -341,17 +378,69 @@ const CourseDetailPage = () => {
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {quizzes.length}
+                    {quizzes?.length || 0}
                   </div>
                   <div className="text-sm text-gray-600">Quizzes</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {courseData.course.students.length}
+                    {courseData.course.students?.length || 0}
                   </div>
                   <div className="text-sm text-gray-600">Students Enrolled</div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Enrolled Students List */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Enrolled Students ({courseData?.course?.students?.length || 0})
+                </CardTitle>
+                <CardDescription>List of students enrolled in the course</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {courseLoading ? (
+                <div className="flex items-center justify-center h-24">
+                  <div className="text-sm text-gray-500">Loading students...</div>
+                </div>
+              ) : courseData?.course?.students?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p>No students enrolled yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {courseData?.course?.students?.map((student) => (
+                    <div
+                      key={student._id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 font-medium">
+                            {student.email?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{student.email}</h4>
+                          <p className="text-sm text-gray-600 flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            Student Account
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Student</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </>

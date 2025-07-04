@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCourseById } from "@/service/courseService";
+import { getQuizzesByCourse, getMySubmission } from "@/service/quizService";
+import { QuizCard } from "@/components/QuizCard";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, Brain, CheckCircle, Clock } from "lucide-react";
 import { useParams, Link } from "react-router";
 
 const CourseStudentDetailPage = () => {
@@ -14,6 +16,13 @@ const CourseStudentDetailPage = () => {
   } = useQuery({
     queryKey: ["course", id],
     queryFn: () => getCourseById(id),
+  });
+
+  // Fetch quizzes for this course
+  const { data: quizzes, isLoading: quizzesLoading } = useQuery({
+    queryKey: ["quizzes", id],
+    queryFn: () => getQuizzesByCourse(id),
+    enabled: !!id,
   });
 
   console.log("Course ID from params:", id);
@@ -83,45 +92,78 @@ const CourseStudentDetailPage = () => {
         </h1>
         <p className="text-gray-600">{course.course.description}</p>
       </div>
-      
-      {!course.course.materials || course.course.materials.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">
-            Belum ada materi yang ditambahkan oleh teacher
-          </p>
+
+      {/* Materials Section */}
+      <div className="bg-white p-8 rounded-lg shadow-md">
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold">Materi Pembelajaran</h2>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {course.course.materials.map((material, index) => (
-            <Card key={material._id || index}>
-              <CardHeader>
-                <CardTitle className="text-blue-600 text-xl">
-                  {material.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <FileText className="w-5 h-5 text-red-500" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-2">Materi Pembelajaran</p>
-                    <a 
-                      href={material.content} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      <Button variant="link" className="p-0 h-auto">
-                        Buka Materi
-                      </Button>
-                    </a>
+        
+        {!course.course.materials || course.course.materials.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">
+              Belum ada materi yang ditambahkan oleh teacher
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {course.course.materials.map((material, index) => (
+              <Card key={material._id || index}>
+                <CardHeader>
+                  <CardTitle className="text-blue-600 text-xl">
+                    {material.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <FileText className="w-5 h-5 text-red-500" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-2">Materi Pembelajaran</p>
+                      <a 
+                        href={material.content} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        <Button variant="link" className="p-0 h-auto">
+                          Buka Materi
+                        </Button>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Quizzes Section */}
+      <div className="bg-white p-8 rounded-lg shadow-md">
+        <div className="flex items-center gap-2 mb-6">
+          <Brain className="w-6 h-6 text-purple-600" />
+          <h2 className="text-2xl font-bold">Quizzes</h2>
         </div>
-      )}
+        
+        {quizzesLoading ? (
+          <div className="text-center py-8 text-gray-500">
+            Loading quizzes...
+          </div>
+        ) : !quizzes || quizzes.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p>Belum ada quiz yang ditambahkan oleh teacher</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {quizzes.map((quiz) => (
+              <QuizCard key={quiz._id} quiz={quiz} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

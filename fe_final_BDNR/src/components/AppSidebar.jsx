@@ -22,10 +22,19 @@ export const AppSidebar = () => {
   const session = getSession();
   const userRole = session?.role;
 
-  const { data, isLoading } = useQuery({
+  console.log("AppSidebar - Session:", session);
+  console.log("AppSidebar - User role:", userRole);
+
+  const { data, isLoading, error } = useQuery({
     queryKey: ["listCourse"],
     queryFn: getCourseStudent,
+    enabled: userRole === "student", // Only fetch for students
+    staleTime: 0, // Always refetch
+    cacheTime: 0, // Don't cache
+    retry: 1, // Only retry once
   });
+
+  console.log("AppSidebar - Query state:", { data, isLoading, error });
 
   const handleLogout = () => {
     authLogout();
@@ -42,8 +51,7 @@ export const AppSidebar = () => {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">E-Learning</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -120,8 +128,13 @@ export const AppSidebar = () => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {isLoading ? (
-                    <p>Bentar...</p>
-                  ) : (
+                    <p className="text-sm text-gray-500 px-2">Loading courses...</p>
+                  ) : error ? (
+                    <div className="px-2">
+                      <p className="text-sm text-red-500">Error loading courses</p>
+                      <p className="text-xs text-gray-400">{error?.message || "Unknown error"}</p>
+                    </div>
+                  ) : data?.courses?.length > 0 ? (
                     data.courses.map((course) => {
                       return (
                         <SidebarMenuItem key={course._id}>
@@ -135,6 +148,8 @@ export const AppSidebar = () => {
                         </SidebarMenuItem>
                       );
                     })
+                  ) : (
+                    <p className="text-sm text-gray-500 px-2">Belum ada course yang diikuti</p>
                   )}
                 </SidebarMenu>
               </SidebarGroupContent>

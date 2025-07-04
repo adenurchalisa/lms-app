@@ -113,13 +113,32 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Growth Rate
+                  Growth Rate (Daily)
                 </p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {dataOverview?.dailyStats?.length > 0 ? '+12%' : '0%'}
+                <p className={`text-3xl font-bold ${
+                  dataOverview?.growthRate > 0 ? 'text-green-600' : 
+                  dataOverview?.growthRate < 0 ? 'text-red-600' : 
+                  'text-gray-600'
+                }`}>
+                  {dataOverview?.growthRate !== undefined 
+                    ? `${dataOverview.growthRate > 0 ? '+' : ''}${dataOverview.growthRate}%`
+                    : '0%'
+                  }
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {dataOverview?.growthRate > 0 
+                    ? 'Enrollment increasing' 
+                    : dataOverview?.growthRate < 0 
+                    ? 'Enrollment decreasing'
+                    : 'No change from yesterday'
+                  }
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className={`h-8 w-8 ${
+                dataOverview?.growthRate > 0 ? 'text-green-500' : 
+                dataOverview?.growthRate < 0 ? 'text-red-500' : 
+                'text-gray-500'
+              }`} />
             </div>
           </CardContent>
         </Card>
